@@ -1,0 +1,105 @@
+---
+title: 'Project 01: MLB Home Runs'
+author: "Brooke Coneeny"
+date: "1/10/2021"
+output: 
+  pdf_document:
+    highlight: pygments
+    dev: cairo_pdf
+fontsize: 11pt
+geometry: margin = 1in
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+# Overview:
+
+For this project I chose to replicate and re-design a visualization which shows how the number of MLB home runs per year has changed over time.
+
+
+Link to the article containing the graph and data: https://cnsmaryland.org/2019/10/01/a-look-into-major-league-baseballs-massive-home-run-surge-in-2019/
+
+The original data set consists of 2 variables (Year & Number of HRs) and 149 observations (1871-2020). I created a new variable, Era, which categorized what era of baseball each of the years fell into. I used this new data set throughout the project, but the effects of the change can only be seen in the glow-up graph. 
+
+```{r homeruns}
+#Load in data
+library(readxl)
+homeruns <- read_excel("HOMERUNS.xlsx")
+```
+
+**This is the code for the replica I created:**
+```{r replica}
+#Create Replica Plot
+library(tidyverse)
+library(directlabels)
+ggplot(data = homeruns, mapping = aes(x = Year, y = HR)) +
+  geom_line(color = "skyblue", size = 1) +
+  scale_x_continuous(breaks = seq(1880, 2020, 10)) +
+  scale_y_continuous(breaks = seq(0,6500,500)) +
+  labs(title = "MLB Home Runs by Year", size = 5) +
+  theme_classic() +
+  theme(
+    panel.grid.major.x = element_blank(), 
+    panel.grid.major.y = element_line(size = .1, color = "lightgrey"),
+    axis.title.y = element_blank(), 
+    axis.title.x = element_blank(),
+    axis.ticks = element_blank(),
+    axis.line.y = element_blank(),
+  ) +
+  annotate("text", x = 2020, y = 7000, label = "HR")
+```
+  
+
+**This is the code for the glow-down I created:** 
+```{r glow-down}
+#create Glow-Down plot
+ggplot(data = homeruns, mapping = aes(x = Year, y = HR)) +
+  geom_point(color = "blue4") +
+  scale_x_continuous(breaks = seq(1880, 2020, 10)) +
+  scale_y_continuous(breaks = seq(0,6500,500)) +
+  labs(title = "MLB Home Runs by Year", size = 5) +
+  theme_classic() +
+  theme(
+    panel.grid.major.x = element_blank(), 
+    panel.grid.major.y = element_blank(),
+    axis.title.y = element_blank(), 
+    axis.title.x = element_blank(),
+    axis.ticks = element_blank(),
+    axis.line.y = element_blank(),
+    panel.background = element_rect(fill = "gray35"),
+    plot.background = element_rect(fill = "royalblue2"),
+    text = element_text(family = "Impact")
+  )
+```
+
+
+**This is the code for the glow-up I created:**
+```{r glow-up}
+#create Glow-Up plot
+library(extrafont)
+ggplot(data = homeruns) +
+  geom_col(mapping = aes(x = Year, y = HR, fill = Era)) +
+  scale_fill_brewer(palette = "Paired") +
+  geom_line(mapping = aes(x = Year, y = HR), color = "black") +
+  scale_x_continuous(breaks = seq(1880, 2020, 10)) +
+  scale_y_continuous(breaks = seq(0,6500,500)) +
+  labs(
+    title = "MLB Home Runs by Year", 
+    subtitle = "Total number of combined home runs by all teams in the MLB, categorized by Baseball-Era"
+    ) +
+  theme(
+    plot.background = element_rect(fill = "gainsboro"),
+    panel.background = element_rect(fill = "gainsboro"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    text = element_text(family = "Century", size = 10),
+    plot.title = element_text(size = 20),
+    legend.background = element_rect(fill = "gainsboro")
+  )
+```
+
+
