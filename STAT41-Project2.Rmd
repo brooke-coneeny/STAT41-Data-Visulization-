@@ -1,0 +1,405 @@
+---
+title: "Do Additional Home Runs and Doubles Correlate to More Wins?"
+author: "By: Brooke Coneeny"
+output: pdf_document
+fontsize: 11pt
+geometry: margin=1in
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(tidymodels)
+library(GGally)
+library(patchwork)
+library(moderndive)
+library(patchwork)
+library(extrafont)
+```
+# Introduction:
+|       In the world of baseball there are two types of players: power hitters and contact hitters. Those known for their power often hit many home runs but maintain a lower batting average. Those who hit for contact normally have a higher batting average but not as many home runs. This being said, coaches prefer to build either a team full of power or one of speed and contact, depending on their style of play. Because of this common disagreement, I wanted to test whether there is a stronger relationship between home runs and wins or doubles and wins.
+
+|       To begin my research, I took a small sample of the 5 most recent MLB seasons (2015-2019) gathered from baseball-reference.com, not including the 2020 season since it was much shorter in comparison to the others. This resulted in 4 variables (Team, HRs, Doubles, Wins) and 150 observations.  
+
+|       This is a small sample of what the data I am working with looks like:
+```{r load data, echo = FALSE, comment = NA}
+baseball_data = read_csv("baseball.csv")
+baseball_data
+```
+# Exploratory Data Analysis: 
+### Demonstrating the Relationships:
+|       I began by creating a scatter plot demonstrating the relationship between the number of home runs hit by a team in the MLB and the amount of season wins they earned. Because a home run is automatically a run scored for the offensive team, it could be easily assumed that teams who hit more home runs also win more games. The plot below shows us there is clearly a positive linear relationship between home runs and wins, however we will examine how strong this relationship is later in the analysis. 
+
+```{r relationship, echo=FALSE, comment = NA, fig.cap = "Relationship Between Home Runs and Wins"}
+#Demonstrating relationship between home runs and wins
+ggplot(baseball_data,aes(x = HRs, y = Wins)) +
+  geom_point() +
+  geom_jitter() +
+  labs(
+    title = "Relationship Between Home Runs and Wins",
+    subtitle = "Includes data from all teams in the MLB from 2016-2019    
+Each point represents the total wins earned and HRs hit by one team in a season",
+    x = "Total HRs (in one season)",
+    y = "Wins"
+  ) +
+  theme(
+    plot.background = element_rect(fill = "gray95"),
+    panel.background = element_rect(fill = "gray95"),
+    text = element_text(family = "Century", size = 10),
+    plot.title = element_text(size = 20),
+    axis.title = element_text(size = 13),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line.x = element_line(color = "black"),
+    axis.line.y = element_line(color = "black")
+  ) +
+  stat_smooth(formula = y ~ x, method = "lm", se = FALSE, color = "firebrick1")
+```
+
+|       I then created a scatter plot demonstrating the relationship between the number of doubles hit by a team in the MLB and the amount of season wins they earned. Unlike home runs, doubles do not automatically help a team score, because the runner can be left on base without scoring. However, doubles are still very beneficial for they put a runner in scoring position (runner on second base) therefore there should still be some form of a linear relationship. The plot below shows us that there is in fact a positive linear relationship between doubles and wins, however we will examine how strong this relationship is later in the analysis. 
+
+```{r relationship2, echo = FALSE, comment = NA, fig.cap = "Relationship Between Doubles and Wins"}
+#Demonstrating relationship between doubles and wins
+ggplot(baseball_data,aes(x = Doubles, y = Wins)) +
+  geom_point() +
+  geom_jitter() +
+  labs(
+    title = "Relationship Between Doubles and Wins",
+    subtitle = "Includes data from all teams in the MLB from 2016-2019    
+Each point represents the total wins earned and Doubles hit by one team in a season",
+    x = "Total Doubles (in one season)",
+    y = "Wins"
+  ) +
+  theme(
+    plot.background = element_rect(fill = "gray95"),
+    panel.background = element_rect(fill = "gray95"),
+    text = element_text(family = "Century", size = 10),
+    plot.title = element_text(size = 20),
+    axis.title = element_text(size = 13),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line.x = element_line(color = "black"),
+    axis.line.y = element_line(color = "black")
+  ) +
+  stat_smooth(formula = y ~ x, method = "lm", se = FALSE, color = "firebrick1")
+```
+
+###    Checking Linear Regression Assumptions:
+
+|       Before I moved on with the other calculations, I had to check the four assumptions of linear regression for the "Relationship Between Home Runs and Wins" graph. The plots below demonstrate that all four assumptions pass. A linear relationship is shown based on the scatter plot "Relationship Between Home Runs and Wins", because the data seems to follow a linear pattern which means this assumption passes. Based on the "Predictor Variable vs Residual" graph, it is evident that there is no relationships between the residuals and the predictor variable, therefore the assumption of independent observations passes. Because the "Distribution of Residuals" graph is unimodal, symmetric and roughly bell shaped, the assumption of normal residuals passes. Lastly, because the graph "Fitted Values vs Residuals" demonstrates no relationship between the residuals and the fitted values, the assumption of equal variance in residuals passes.
+
+```{r testing the LINE assumptions, echo = FALSE, comment = NA}
+lm_mod = lm(Wins ~ HRs, data = baseball_data) 
+lm_res = augment(lm_mod, interval = "prediction")
+p1 = ggplot(lm_res, aes(x = HRs, y = .resid)) +
+  geom_point() +
+  labs(
+    title = "Predictor Variable \n vs Residuals",
+    x = "Home Runs",
+    y = "Residuals"
+  ) +
+  theme(
+    plot.background = element_rect(fill = "gray95"),
+    panel.background = element_rect(fill = "gray95"),
+    text = element_text(family = "Century"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line.x = element_line(color = "black"),
+    axis.line.y = element_line(color = "black")
+  )
+
+p2 = ggplot(lm_res, aes(x = .resid)) + 
+  geom_histogram(bins = 15) +
+  labs(
+    title = "Distribution of \n Residuals",
+    x = "Residuals",
+    y = "Count"
+  ) +
+  theme(
+    plot.background = element_rect(fill = "gray95"),
+    panel.background = element_rect(fill = "gray95"),
+    text = element_text(family = "Century"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line.x = element_line(color = "black"),
+    axis.line.y = element_line(color = "black")
+  )
+
+p3 = ggplot(lm_res, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  labs(
+    x = "Fitted Values",
+    y = "Residuals",
+    title = "Fitted Values \n vs Residuals"
+  ) +
+  theme(
+    plot.background = element_rect(fill = "gray95"),
+    panel.background = element_rect(fill = "gray95"),
+    text = element_text(family = "Century"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line.x = element_line(color = "black"),
+    axis.line.y = element_line(color = "black")
+  )
+
+p1 + p2 + p3
+```
+
+|       Again I had to check the four assumptions of linear regression, however this time for the "Relationship Between Doubles and Wins" graph. The plots below demonstrate that all four assumptions pass. A linear relationship is shown based on the scatter plot "Relationship Between Doubles and Wins", because the data seems to follow a linear pattern which means this assumption passes. Based on the "Predictor Variable vs Residual" graph, it is evident that there is no relationships between the residuals and the predictor variable, therefore the assumption of independent observations passes. Because the "Distribution of Residuals" graph is unimodal, symmetric and roughly bell shaped, the assumption of normal residuals passes. Lastly, because the graph "Fitted Values vs Residuals" demonstrates no relationship between the residuals and the fitted values, the assumption of equal variance in residuals passes.
+
+```{r testing the LINE assumptions again, echo = FALSE, comment = NA}
+lm_mod2 = lm(Wins ~ Doubles, data = baseball_data) 
+lm_res2 = augment(lm_mod2, interval = "prediction")
+p4 = ggplot(lm_res2, aes(x = Doubles, y = .resid)) +
+  geom_point() +
+  labs(
+    title = "Predictor Variable \n vs Residuals",
+    x = "Doubles",
+    y = "Residuals"
+  ) +
+  theme(
+    plot.background = element_rect(fill = "gray95"),
+    panel.background = element_rect(fill = "gray95"),
+    text = element_text(family = "Century"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line.x = element_line(color = "black"),
+    axis.line.y = element_line(color = "black")
+  )
+
+p5 = ggplot(lm_res2, aes(x = .resid)) + 
+  geom_histogram(bins = 15) +
+  labs(
+    title = "Distribution of \n Residuals",
+    x = "Residuals",
+    y = "Count"
+  ) +
+  theme(
+    plot.background = element_rect(fill = "gray95"),
+    panel.background = element_rect(fill = "gray95"),
+    text = element_text(family = "Century"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line.x = element_line(color = "black"),
+    axis.line.y = element_line(color = "black")
+  )
+
+p6 = ggplot(lm_res2, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  labs(
+    x = "Fitted Values",
+    y = "Residuals",
+    title = "Fitted Values \n vs Residuals"
+  ) +
+  theme(
+    plot.background = element_rect(fill = "gray95"),
+    panel.background = element_rect(fill = "gray95"),
+    text = element_text(family = "Century"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line.x = element_line(color = "black"),
+    axis.line.y = element_line(color = "black")
+  )
+
+p4 + p5 + p6
+```
+
+##      Further Analysis:
+|       To begin my further analysis into the relationship, I calculated the correlation coefficient for the variables Wins and HRs and my result was: 
+
+```{r correlation homerun, echo = FALSE, comment = NA}
+baseball_data %>% 
+  summarize(correlation = cor(Wins, HRs))
+```
+
+|       I also calculated the correlation coefficient for the variables Wins and Doubles:
+```{r correlation doubles, echo = FALSE, comment = NA}
+baseball_data %>% 
+  summarize(correlation = cor(Wins, Doubles))
+```
+
+|       As you can see above, the correlation coefficient between wins and home runs is 0.444, which tells us that there is a strong, positive correlation between the two variables. We can also see that the correlation coefficient between wins and doubles is 0.387, which tells us that there is a moderate, positive correlation coefficient between the two variables. At this point in our analysis, we know that both relationships are positive, however the relationship between home runs and wins is slightly stronger. 
+|
+|       To examine the data deeper, I found the regression tables for both relationships, which resulted in the following equations:
+
+```{r regression home run, echo = FALSE, comment = NA}
+lm_mod = lm(Wins ~ HRs, data = baseball_data) 
+get_regression_table(lm_mod)
+```
+
+```{r regression doubles, echo = FALSE, comment = NA}
+lm_mod2 = lm(Wins ~ Doubles, data = baseball_data) 
+get_regression_table(lm_mod2)
+```
+
+\[
+  Wins = 52.8 + 0.145(Home Runs)
+\]
+
+\[
+  Wins = 27.6 + 0.192(Doubles)
+\]
+
+|       Both equations have a positive slope, confirming our original belief that there is a positive relationship between wins and home runs, while also a positive relationship between wins and doubles. Equation 1 tells us that for every additional home run, there is an associated increase of, on average, 0.145 wins. Equation 2 tells us that for every additional double, there is an associated increase of, on average, 0.192 wins. However, although doubles are associated with a greater increase in wins per hit, the y-intercept in Equation 1 is much higher. This tells us home runs automatically start with a higher average number of wins, meaning that a team would have to hit a significant amount of doubles in order to surpass a team that hits majority home runs. 
+
+##  Results:
+|       Although we have found that there is a correlation between the number of home runs or doubles hit and the total number of wins, how closely does our regression line actually predict our data? 
+|       To give a brief overview into regression, each point on our regression line (red line in figure 1 and 2) is an estimated value of wins we predicted based on either the number of home runs or doubles hit. The distance between the actual data points (black points) from the predicted value points on the line is known as a residual. The larger the residuals, the less accurate the regression line is. In order to find out how accurate the regression line in Figure 1 & 2 above were, I found the value of r^2^ for both.
+|
+|
+|
+|
+r^2^ value for Figure 1:
+```{r squared home runs, echo = FALSE, comment = NA}
+lm_mod3 = lm(Wins ~ HRs, data = baseball_data) 
+summary(lm_mod3)$r.squared
+```
+r^2^ value for Figure 2:
+```{r squared doubles, echo = FALSE, comment = NA}
+lm_mod4 = lm(Wins ~ Doubles, data = baseball_data) 
+summary(lm_mod4)$r.squared
+```
+
+|       As seen above, the r-squared value for the regression line measuring home runs against wins is 0.19745 or about 20%. The r-squared value for the regression line measuring doubles against wins is 0.1498 or about 15%. Unfortunately, neither of these r-squared values are ideal, but in fact tell us that our regression lines can not be relied on to make accurate predictions about the number of wins a team will have at the end of their season based on how many home runs or doubles they hit. 
+|       Although in the end the equations for the regression lines we found are not accurate enough to make a prediction about the number of wins a team will have at the end of a season, we were able to prove that there is a strong correlation between the number of home runs hit and the number of wins a team earns in a season. We also learned that there is a moderate correlation between the number of doubles hit and the number of wins a team earns in a season. These findings also go to show that there are many more elements in the game of baseball that predict the number of wins a team earns in one season other than just how many big hits they can get.
+
+\newpage
+#  My Code: 
+```{r The Code, results = "hide", fig.show = "hide"}
+#loading data
+baseball_data = read_csv("baseball.csv")
+baseball_data
+
+#Demonstrating relationship between home runs and wins
+ggplot(baseball_data,aes(x = HRs, y = Wins)) +
+  geom_point() +
+  geom_jitter() +
+  labs(
+    title = "Relationship Between Home Runs and Wins",
+    subtitle = "Data is from all teams in the MLB including 2016-2019 seasons   
+Each point represents the total wins and HRs hit by one team",
+    x = "Total HRs (in one season)",
+    y = "Wins"
+  ) +
+  theme(
+    plot.background = element_rect(fill = "gray95"),
+    panel.background = element_rect(fill = "gray95"),
+    text = element_text(family = "Century", size = 10),
+    plot.title = element_text(size = 20),
+    axis.title = element_text(size = 13),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line.x = element_line(color = "black"),
+    axis.line.y = element_line(color = "black")
+  ) +
+  stat_smooth(formula = y ~ x, method = "lm", se = FALSE, color = "firebrick1")
+
+#Demonstrating relationship between doubles and wins
+ggplot(baseball_data,aes(x = Doubles, y = Wins)) +
+  geom_point() +
+  geom_jitter() +
+  labs(
+    title = "Relationship Between Doubles and Wins",
+    subtitle = "Data is from all teams in the MLB including 2016-2019 seasons   
+Each point represents the total wins and HRs hit by one team",
+    x = "Total Doubles (in one season)",
+    y = "Wins"
+  ) +
+  theme(
+    plot.background = element_rect(fill = "gray95"),
+    panel.background = element_rect(fill = "gray95"),
+    text = element_text(family = "Century", size = 10),
+    plot.title = element_text(size = 20),
+    axis.title = element_text(size = 13),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.line.x = element_line(color = "black"),
+    axis.line.y = element_line(color = "black")
+  ) +
+  stat_smooth(formula = y ~ x, method = "lm", se = FALSE, color = "firebrick1")
+
+#testing line assumptions
+lm_mod = lm(Wins ~ HRs, data = baseball_data) 
+lm_res = augment(lm_mod, interval = "prediction")
+p1 = ggplot(lm_res, aes(x = HRs, y = .resid)) +
+  geom_point() +
+  labs(
+    title = "Predictor Variable \n vs Residuals",
+    x = "Home Runs",
+    y = "Residuals"
+  ) +
+  theme_classic()
+
+p2 = ggplot(lm_res, aes(x = .resid)) + 
+  geom_histogram(bins = 15) +
+  labs(
+    title = "Distribution of \n Residuals",
+    x = "Residuals",
+    y = "Count"
+  ) +
+  theme_classic()
+
+p3 = ggplot(lm_res, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  labs(
+    x = "Fitted Values",
+    y = "Residuals",
+    title = "Fitted Values \n vs Residuals"
+  ) +
+  theme_classic()
+
+p1 + p2 + p3
+
+lm_mod2 = lm(Wins ~ Doubles, data = baseball_data) 
+lm_res2 = augment(lm_mod2, interval = "prediction")
+p4 = ggplot(lm_res2, aes(x = Doubles, y = .resid)) +
+  geom_point() +
+  labs(
+    title = "Predictor Variable \n vs Residuals",
+    x = "Doubles",
+    y = "Residuals"
+  ) +
+  theme_classic()
+
+p5 = ggplot(lm_res2, aes(x = .resid)) + 
+  geom_histogram(bins = 15) +
+  labs(
+    title = "Distribution of \n Residuals",
+    x = "Residuals",
+    y = "Count"
+  ) +
+  theme_classic()
+
+p6 = ggplot(lm_res2, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  labs(
+    x = "Fitted Values",
+    y = "Residuals",
+    title = "Fitted Values \n vs Residuals"
+  ) +
+  theme_classic()
+
+p4 + p5 + p6
+
+#correlation coefficients
+baseball_data %>% 
+  summarize(correlation = cor(Wins, HRs))
+
+baseball_data %>% 
+  summarize(correlation = cor(Wins, Doubles))
+
+#regression tables
+lm_mod = lm(Wins ~ HRs, data = baseball_data) 
+get_regression_table(lm_mod)
+
+lm_mod2 = lm(Wins ~ Doubles, data = baseball_data) 
+get_regression_table(lm_mod2)
+
+#r-squared values
+lm_mod3 = lm(Wins ~ HRs, data = baseball_data) 
+summary(lm_mod3)$r.squared
+
+lm_mod4 = lm(Wins ~ Doubles, data = baseball_data) 
+summary(lm_mod4)$r.squared
+```
+
